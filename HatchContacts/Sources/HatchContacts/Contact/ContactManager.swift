@@ -15,7 +15,7 @@ public class ContactManager {
     
     // MARK: Public vars
     
-    public var contacts: [Contact] = [] {
+    public private(set) var contacts: [Contact] = [] {
         didSet {
             logger.debug("Did load \(self.contacts.count) contacts")
         }
@@ -56,8 +56,23 @@ public class ContactManager {
     }
     
     public func loadContacts() async throws {
-        #warning("TODO: Implement Functional Requirement #1 (from README.md)")
-        // self.contacts = ...
+        contacts = []
+        let keysToFetch = [CNContactIdentifierKey,
+                           CNContactGivenNameKey,
+                           CNContactFamilyNameKey,
+                           CNContactEmailAddressesKey,
+                           CNContactPostalAddressesKey,
+                           CNContactPhoneNumbersKey]
+        let fetchRequest = CNContactFetchRequest(keysToFetch: keysToFetch as [CNKeyDescriptor])
+        try store.enumerateContacts(with: fetchRequest, usingBlock: { (cnContact, stop) in
+            let newContact = Contact(identifier: cnContact.identifier,
+                                     firstName: cnContact.givenName,
+                                     lastName: cnContact.familyName,
+                                     emailAddress: cnContact.emailAddresses.first,
+                                     postalAddress: cnContact.postalAddresses.first,
+                                     phoneNumber: cnContact.phoneNumbers.first)
+            contacts.append(newContact)
+        })
     }
 
     private func loadPlaceholderContacts() -> [Contact] {
