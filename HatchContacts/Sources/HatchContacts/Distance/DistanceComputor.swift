@@ -10,10 +10,6 @@ import Foundation
 
 public class DistanceComputor: DistanceComputable {
     
-    private var requestCount = 0
-    private let maxRequests = 50
-    private let throttlePeriod: UInt64 = 60_000_000_000
-    
     public init() {}
     
     public func distanceInKmBetween(contact: Contact, deviceLocation: CLLocation) async throws -> (any DistanceRepresentable)? {
@@ -22,7 +18,7 @@ public class DistanceComputor: DistanceComputable {
             return nil
         }
         
-        guard let contactLocation = await fetchLocation(from: postalAddress) else {
+        guard let contactLocation = try await fetchLocation(from: postalAddress) else {
             logger.debug("Location from contact failed to be fetched")
             return nil
         }
@@ -31,26 +27,7 @@ public class DistanceComputor: DistanceComputable {
         return DistanceContainer(contact: contact, deviceLocation: deviceLocation, distance: distance)
     }
     
-    func fetchLocation(from postalAddress: CNPostalAddress) async -> CLLocation? {
-        if requestCount >= maxRequests {
-            requestCount = 0
-            try? await Task.sleep(nanoseconds: throttlePeriod)
-        }
-
-        requestCount += 1
-        
-        return await withCheckedContinuation { continuation in
-            CLGeocoder().geocodePostalAddress(postalAddress) { placemarks, error in
-                if let error = error {
-                    logger.debug("geocodePostalAddress from contact failed to be fetched \(error.localizedDescription)")
-                }
-                
-                if let location = placemarks?.compactMap({$0.location}).first {
-                    continuation.resume(returning: location)
-                } else {
-                    continuation.resume(returning: nil)
-                }
-            }
-        }
+    func fetchLocation(from postalAddress: CNPostalAddress) async throws -> CLLocation? {
+        return try await CLGeocoder().geocodePostalAddress(postalAddress).compactMap({$0.location}).first
     }
 }
