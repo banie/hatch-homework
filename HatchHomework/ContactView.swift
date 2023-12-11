@@ -17,6 +17,7 @@ struct ContactView: View {
     
     @State var contact: Contact
     @State private var distanceContainer: (any DistanceRepresentable)?
+    @State private var isVisible = false
     
     var body: some View {
         VStack(
@@ -42,11 +43,17 @@ struct ContactView: View {
                 .font(.caption2)
         }
         .onAppear {
+            isVisible = true
             fetchDistanceRepresentable()
         }
+        .onDisappear {
+            isVisible = false
+        }
         .onChange(of: locationManager.locationUpdated) {
-            logger.debug("locationUpdated is triggered")
-            fetchDistanceRepresentable()
+            if isVisible {
+                logger.debug("xxxx locationUpdated is triggered, update visible rows")
+                fetchDistanceRepresentable()
+            }
         }
     }
     
