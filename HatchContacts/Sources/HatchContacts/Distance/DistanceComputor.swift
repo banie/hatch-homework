@@ -8,18 +8,19 @@ import Contacts
 import CoreLocation
 import Foundation
 
-public class DistanceComputor: DistanceComputable {
+public actor DistanceComputor: DistanceComputable {
+    
+    var cache: [String: CLLocation?] = [:]
     
     public init() {}
     
     public func distanceInKmBetween(contact: Contact, deviceLocation: CLLocation) async throws -> (any DistanceRepresentable)? {
         guard let postalAddress = contact.postalAddress?.value else {
-            logger.debug("contact.postalAddress is nil")
+            logger.debug("postalAddress of \(contact.id) is nil")
             return nil
         }
         
-        guard let contactLocation = try await fetchLocation(from: postalAddress) else {
-            logger.debug("Location from contact failed to be fetched")
+        guard let contactLocation = await fetchLocation(from: contact.id, postalAddress: postalAddress) else {
             return nil
         }
         
@@ -27,7 +28,20 @@ public class DistanceComputor: DistanceComputable {
         return DistanceContainer(contact: contact, deviceLocation: deviceLocation, distance: distance)
     }
     
-    func fetchLocation(from postalAddress: CNPostalAddress) async throws -> CLLocation? {
-        return try await CLGeocoder().geocodePostalAddress(postalAddress).compactMap({$0.location}).first
+    private func fetchLocation(from contactId: String, postalAddress: CNPostalAddress) async -> CLLocation? {
+        if let location = cache[contactId] {
+            return location
+        }
+        
+        let location: CLLocation?
+        do {
+            location = try await CLGeocoder().geocodePostalAddress(postalAddress).compactMap({$0.location}).first
+        } catch {
+            logger.debug("No location is found for contact: \(contactId)")
+            location = nil
+        }
+        
+        cache.updateValue(location, forKey: contactId)
+        return location
     }
 }
