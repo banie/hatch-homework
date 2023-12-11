@@ -20,10 +20,12 @@ struct ContactsView: View {
     
     @State private var isPermissionSheetPresented = false
         
+    private let distanceComputor = DistanceComputor()
+    
     var body: some View {
         NavigationView {
             List(contactManager.contacts) { contact in
-                ContactView(contact: contact)
+                ContactView(distanceComputor: distanceComputor, contact: contact)
                     .environment(LocationManager.shared)
             }
             .navigationBarTitle("Contacts", displayMode: .inline)

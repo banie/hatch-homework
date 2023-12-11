@@ -9,6 +9,10 @@ import CoreLocation
 import Foundation
 
 public class DistanceComputor: DistanceComputable {
+    
+    private var requestCount = 0
+    private let maxRequests = 50
+    private let throttlePeriod: UInt64 = 60_000_000_000
     private let geocoder: CLGeocoder
     
     public init() {
@@ -22,7 +26,7 @@ public class DistanceComputor: DistanceComputable {
         }
         
         guard let contactLocation = await fetchLocation(from: postalAddress) else {
-            logger.debug("location from contact failed to be fetched")
+            logger.debug("Location from contact failed to be fetched")
             return nil
         }
         
@@ -31,6 +35,13 @@ public class DistanceComputor: DistanceComputable {
     }
     
     func fetchLocation(from postalAddress: CNPostalAddress) async -> CLLocation? {
+        if requestCount >= maxRequests {
+            requestCount = 0
+            try? await Task.sleep(nanoseconds: throttlePeriod)
+        }
+
+        requestCount += 1
+        
         return await withCheckedContinuation { continuation in
             geocoder.geocodePostalAddress(postalAddress) { placemarks, error in
                 if let error = error {

@@ -13,11 +13,10 @@ struct ContactView: View {
     @Environment(LocationManager.self)
     private var locationManager: LocationManager
     
+    let distanceComputor: DistanceComputable
+    
     @State var contact: Contact
-    
     @State private var distanceContainer: (any DistanceRepresentable)?
-    
-    private let distanceComputor = DistanceComputor()
     
     var body: some View {
         VStack(
@@ -62,5 +61,5 @@ struct ContactView: View {
 }
 
 #Preview("ContactView") {
-    ContactView(contact: .placeholder())
+    ContactView(distanceComputor: DistanceComputor(), contact: .placeholder())
 }
