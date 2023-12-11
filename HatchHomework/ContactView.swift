@@ -7,11 +7,17 @@
 
 import HatchContacts
 import SwiftUI
+import CoreLocation
 
 struct ContactView: View {
+    @Environment(LocationManager.self)
+    private var locationManager: LocationManager
+    
     @State var contact: Contact
     
     @State private var distanceContainer: (any DistanceRepresentable)?
+    
+    private let distanceComputor = DistanceComputor()
     
     var body: some View {
         VStack(
@@ -27,13 +33,24 @@ struct ContactView: View {
                     .font(.callout)
             }
             
-            #warning("TODO: Implement Functional Requirement #2 (from README.md)")
-            Text("Distance: Implement Me!\ndistanceContainer.distance(...)")
-                .font(.callout)
-                .foregroundColor(.red)
-                        
+            if let distanceContainer = distanceContainer {
+                Text("Distance: \(distanceContainer.distance)")
+                    .font(.callout)
+                    .foregroundColor(.red)
+            }
+            
             Text("\(contact.identifier)")
                 .font(.caption2)
+        }.onChange(of: locationManager.locationUpdated) {
+            if let deviceLocation = locationManager.currentLocation {
+                fetchDistanceRepresentable(with: deviceLocation)
+            }
+        }
+    }
+    
+    private func fetchDistanceRepresentable(with deviceLocation: CLLocation) {
+        Task.detached {
+            distanceContainer = try await distanceComputor.distanceInKmBetween(contact: contact, deviceLocation: deviceLocation)
         }
     }
 }

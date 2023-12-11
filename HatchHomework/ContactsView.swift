@@ -12,6 +12,9 @@ struct ContactsView: View {
     @Environment(ContactManager.self)
     private var contactManager: ContactManager
     
+    @Environment(LocationManager.self)
+    private var locationManager: LocationManager
+    
     @Environment(PermissionsViewModel.self)
     private var permissionsViewModel: PermissionsViewModel
     
@@ -21,6 +24,7 @@ struct ContactsView: View {
         NavigationView {
             List(contactManager.contacts) { contact in
                 ContactView(contact: contact)
+                    .environment(LocationManager.shared)
             }
             .navigationBarTitle("Contacts", displayMode: .inline)
             
@@ -53,6 +57,7 @@ struct ContactsView: View {
                 return
             }
             refreshContacts()
+            locationManager.requestAuthorization(authorizationChanged: nil)
         }
         .sheet(isPresented: $isPermissionSheetPresented) {
             PermissionsView()
