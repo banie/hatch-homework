@@ -10,9 +10,11 @@ import Foundation
 
 public actor DistanceComputor: DistanceComputable {
     
-    var cache: [String: CLLocation?] = [:]
+    private var cache: [String: DistanceContainer?]
     
-    public init() {}
+    public init() {
+        cache = [:]
+    }
     
     public func distanceInKmBetween(contact: Contact, deviceLocation: CLLocation) async throws -> (any DistanceRepresentable)? {
         guard let postalAddress = contact.postalAddress?.value else {
@@ -20,28 +22,28 @@ public actor DistanceComputor: DistanceComputable {
             return nil
         }
         
-        guard let contactLocation = await fetchLocation(from: contact.id, postalAddress: postalAddress) else {
+        if let distanceContainer = cache[contact.id] {
+            return distanceContainer
+        }
+        
+        guard let contactLocation = await fetchLocation(from: postalAddress) else {
+            cache.updateValue(nil, forKey: contact.id)
             return nil
         }
         
         let distance = contactLocation.distance(from: deviceLocation) / 1000
-        return DistanceContainer(contact: contact, deviceLocation: deviceLocation, distance: distance)
+        let distanceContainer = DistanceContainer(contact: contact, deviceLocation: deviceLocation, distance: distance)
+        cache.updateValue(distanceContainer, forKey: contact.id)
+        
+        return distanceContainer
     }
     
-    private func fetchLocation(from contactId: String, postalAddress: CNPostalAddress) async -> CLLocation? {
-        if let location = cache[contactId] {
-            return location
-        }
-        
-        let location: CLLocation?
+    private func fetchLocation(from postalAddress: CNPostalAddress) async -> CLLocation? {
         do {
-            location = try await CLGeocoder().geocodePostalAddress(postalAddress).compactMap({$0.location}).first
+            return try await CLGeocoder().geocodePostalAddress(postalAddress).compactMap({$0.location}).first
         } catch {
-            logger.debug("No location is found for contact: \(contactId)")
-            location = nil
+            logger.debug("No location is found for postalAddress: \(postalAddress)")
+            return nil
         }
-        
-        cache.updateValue(location, forKey: contactId)
-        return location
     }
 }
