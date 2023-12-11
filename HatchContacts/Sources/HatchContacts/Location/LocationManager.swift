@@ -14,8 +14,8 @@ public class LocationManager: NSObject {
     public static let shared = LocationManager()
     
     // MARK: Public vars
-    
     public var currentLocation: CLLocation?
+    public var locationUpdated: Bool = false
     
     // MARK: Private vars
     
@@ -74,6 +74,7 @@ extension LocationManager: CLLocationManagerDelegate {
         didUpdateLocations locations: [CLLocation]
     ) {
         currentLocation = locations.last
+        locationUpdated.toggle()
         guard let location = locations.first else { return }
         logger.debug("User location: \(location)")
     }
