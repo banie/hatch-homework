@@ -9,8 +9,11 @@ import CoreLocation
 import Foundation
 
 public class DistanceComputor: DistanceComputable {
+    private let geocoder: CLGeocoder
     
-    public init() {}
+    public init() {
+        geocoder = CLGeocoder()
+    }
     
     public func distanceInKmBetween(contact: Contact, deviceLocation: CLLocation) async throws -> (any DistanceRepresentable)? {
         guard let postalAddress = contact.postalAddress?.value else {
@@ -28,10 +31,13 @@ public class DistanceComputor: DistanceComputable {
     }
     
     func fetchLocation(from postalAddress: CNPostalAddress) async -> CLLocation? {
-        let geocoder = CLGeocoder()
         return await withCheckedContinuation { continuation in
             geocoder.geocodePostalAddress(postalAddress) { placemarks, error in
-                if let placemark = placemarks?.first, let location = placemark.location {
+                if let error = error {
+                    logger.debug("geocodePostalAddress from contact failed to be fetched \(error.localizedDescription)")
+                }
+                
+                if let location = placemarks?.compactMap({$0.location}).first {
                     continuation.resume(returning: location)
                 } else {
                     continuation.resume(returning: nil)
