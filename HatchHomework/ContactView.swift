@@ -34,7 +34,7 @@ struct ContactView: View {
             }
             
             if let distanceContainer = distanceContainer {
-                Text("Distance: \(distanceContainer.distance)")
+                Text("Distance: \(String(format: "%.2f km", distanceContainer.distance))")
                     .font(.callout)
                     .foregroundColor(.red)
             }

@@ -22,7 +22,7 @@ public class DistanceComputor: DistanceComputable {
             return nil
         }
         
-        let distance = contactLocation.distance(from: deviceLocation)
+        let distance = contactLocation.distance(from: deviceLocation) / 1000
         return DistanceContainer(contact: contact, deviceLocation: deviceLocation, distance: distance)
     }
     
