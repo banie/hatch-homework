@@ -24,30 +24,33 @@ struct ContactsView: View {
     
     var body: some View {
         NavigationView {
-            List(contactManager.contacts) { contact in
-                ContactView(distanceComputor: distanceComputor, contact: contact)
-                    .environment(LocationManager.shared)
-            }
-            .navigationBarTitle("Contacts", displayMode: .inline)
-            
-            .toolbar {
-                #if targetEnvironment(simulator)
-                    // For simulators, allow importing of fake contacts
-                    Button("Import", systemImage: "person.crop.circle.badge.plus") {
-                        do {
-                            try ContactImporter.shared.importContactsFromJson()
-                            refreshContacts()
-                        } catch ContactImporter.Error.alreadyImported {
-                            logger.error("Contact have already been imported.")
-                        } catch {
-                            logger.fault("Failed to import contacts from json file: \(error.localizedDescription)")
+            if contactManager.isLoading {
+                ProgressView("Loading Contacts...")
+            } else {
+                List(contactManager.contacts) { contact in
+                    ContactView(distanceComputor: distanceComputor, contact: contact)
+                        .environment(LocationManager.shared)
+                }
+                .navigationBarTitle("Contacts", displayMode: .inline)
+                .toolbar {
+                    #if targetEnvironment(simulator)
+                        // For simulators, allow importing of fake contacts
+                        Button("Import", systemImage: "person.crop.circle.badge.plus") {
+                            do {
+                                try ContactImporter.shared.importContactsFromJson()
+                                refreshContacts()
+                            } catch ContactImporter.Error.alreadyImported {
+                                logger.error("Contact have already been imported.")
+                            } catch {
+                                logger.fault("Failed to import contacts from json file: \(error.localizedDescription)")
+                            }
                         }
-                    }
-                    .disabled(ContactImporter.Defaults.contactsImported())
-                #endif
-            }
-            .refreshable {
-                refreshContacts()
+                        .disabled(ContactImporter.Defaults.contactsImported())
+                    #endif
+                }
+                .refreshable {
+                    refreshContacts()
+                }
             }
         }
         .navigationViewStyle(StackNavigationViewStyle())

@@ -14,7 +14,7 @@ public class ContactManager {
     public static let shared = ContactManager()
     
     // MARK: Public vars
-    
+    public private(set) var isLoading: Bool = false
     public private(set) var contacts: [Contact] = [] {
         didSet {
             logger.debug("Did load \(self.contacts.count) contacts")
@@ -56,6 +56,7 @@ public class ContactManager {
     }
     
     public func loadContacts() async throws {
+        isLoading = true
         contacts = []
         let keysToFetch = [CNContactIdentifierKey,
                            CNContactGivenNameKey,
@@ -65,6 +66,7 @@ public class ContactManager {
                            CNContactPhoneNumbersKey]
         let fetchRequest = CNContactFetchRequest(keysToFetch: keysToFetch as [CNKeyDescriptor])
         try store.enumerateContacts(with: fetchRequest, usingBlock: { (cnContact, stop) in
+            isLoading = false
             let newContact = Contact(identifier: cnContact.identifier,
                                      firstName: cnContact.givenName,
                                      lastName: cnContact.familyName,
