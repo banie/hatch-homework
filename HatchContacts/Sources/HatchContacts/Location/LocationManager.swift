@@ -14,8 +14,8 @@ public class LocationManager: NSObject {
     public static let shared = LocationManager()
     
     // MARK: Public vars
-    public var currentLocation: CLLocation?
-    public var locationUpdated: Bool = false
+    public private(set) var currentLocation: CLLocation?
+    public private(set) var locationUpdated: Bool = false
     
     // MARK: Private vars
     

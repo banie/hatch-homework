@@ -21,7 +21,7 @@ public class ContactManager {
         }
     }
     
-    public var authorizationStatus: AuthorizationStatus = .notDetermined
+    public private(set) var authorizationStatus: AuthorizationStatus = .notDetermined
     
     // MARK: Private vars
     
