@@ -13,11 +13,8 @@ public class DistanceComputor: DistanceComputable {
     private var requestCount = 0
     private let maxRequests = 50
     private let throttlePeriod: UInt64 = 60_000_000_000
-    private let geocoder: CLGeocoder
     
-    public init() {
-        geocoder = CLGeocoder()
-    }
+    public init() {}
     
     public func distanceInKmBetween(contact: Contact, deviceLocation: CLLocation) async throws -> (any DistanceRepresentable)? {
         guard let postalAddress = contact.postalAddress?.value else {
@@ -43,7 +40,7 @@ public class DistanceComputor: DistanceComputable {
         requestCount += 1
         
         return await withCheckedContinuation { continuation in
-            geocoder.geocodePostalAddress(postalAddress) { placemarks, error in
+            CLGeocoder().geocodePostalAddress(postalAddress) { placemarks, error in
                 if let error = error {
                     logger.debug("geocodePostalAddress from contact failed to be fetched \(error.localizedDescription)")
                 }
