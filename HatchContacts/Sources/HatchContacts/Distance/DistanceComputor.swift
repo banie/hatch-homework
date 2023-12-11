@@ -11,9 +11,11 @@ import Foundation
 public actor DistanceComputor: DistanceComputable {
     
     private var cache: [String: DistanceContainer?]
+    private let locationComputor: LocationComputable
     
-    public init() {
+    public init(locationComputor: LocationComputable = LocationComputor()) {
         cache = [:]
+        self.locationComputor = locationComputor
     }
     
     public func distanceInKmBetween(contact: Contact, deviceLocation: CLLocation) async throws -> (any DistanceRepresentable)? {
@@ -26,7 +28,7 @@ public actor DistanceComputor: DistanceComputable {
             return distanceContainer
         }
         
-        guard let contactLocation = await fetchLocation(from: postalAddress) else {
+        guard let contactLocation = await locationComputor.fetchLocation(from: postalAddress) else {
             cache.updateValue(nil, forKey: contact.id)
             return nil
         }
@@ -36,14 +38,5 @@ public actor DistanceComputor: DistanceComputable {
         cache.updateValue(distanceContainer, forKey: contact.id)
         
         return distanceContainer
-    }
-    
-    private func fetchLocation(from postalAddress: CNPostalAddress) async -> CLLocation? {
-        do {
-            return try await CLGeocoder().geocodePostalAddress(postalAddress).compactMap({$0.location}).first
-        } catch {
-            logger.debug("No location is found for postalAddress: \(postalAddress)")
-            return nil
-        }
     }
 }
