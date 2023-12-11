@@ -41,14 +41,20 @@ struct ContactView: View {
             
             Text("\(contact.identifier)")
                 .font(.caption2)
-        }.onChange(of: locationManager.locationUpdated) {
-            if let deviceLocation = locationManager.currentLocation {
-                fetchDistanceRepresentable(with: deviceLocation)
-            }
+        }
+        .onAppear {
+            fetchDistanceRepresentable()
+        }
+        .onChange(of: locationManager.locationUpdated) {
+            logger.debug("locationUpdated is triggered")
+            fetchDistanceRepresentable()
         }
     }
     
-    private func fetchDistanceRepresentable(with deviceLocation: CLLocation) {
+    private func fetchDistanceRepresentable() {
+        guard let deviceLocation = locationManager.currentLocation else {
+            return
+        }
         Task.detached {
             distanceContainer = try await distanceComputor.distanceInKmBetween(contact: contact, deviceLocation: deviceLocation)
         }

@@ -14,11 +14,12 @@ public class DistanceComputor: DistanceComputable {
     
     public func distanceInKmBetween(contact: Contact, deviceLocation: CLLocation) async throws -> (any DistanceRepresentable)? {
         guard let postalAddress = contact.postalAddress?.value else {
+            logger.debug("contact.postalAddress is nil")
             return nil
         }
         
         guard let contactLocation = await fetchLocation(from: postalAddress) else {
-            // log that location from contact failed to be fetched
+            logger.debug("location from contact failed to be fetched")
             return nil
         }
         
