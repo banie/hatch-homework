@@ -9,6 +9,9 @@ import CoreLocation
 import Foundation
 
 public class DistanceComputor: DistanceComputable {
+    
+    public init() {}
+    
     public func distanceInKmBetween(contact: Contact, deviceLocation: CLLocation) async throws -> (any DistanceRepresentable)? {
         guard let postalAddress = contact.postalAddress?.value else {
             return nil
